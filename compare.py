@@ -1,25 +1,32 @@
 #!/usr/bin/python3
 import hashlib
 import os
+import sys
 import argparse
-
 
 def generate_folder_hash(folder):
     print("Walking folder "+folder+" and computing a hash of each file.")
     count=0
+    num=0
     for root,dirs,files in os.walk(folder):
         count+=len(files)
+    spaces=len(str(count))
     reference=list()
+    #print('0'.rjust(spaces)+"/"+str(count))
     for root,dirs,files in os.walk(folder):
-        print(len(files))
         for name in files:
+            num+=1
             full_path=os.path.join(root,name)
+            sys.stdout.write('\r')
+            sys.stdout.write(str(num).rjust(spaces)+"/"+str(count))
+            sys.stdout.flush()
             with open(full_path,"rb") as f:
                 sha256_hash=hashlib.sha256()
                 for block in iter(lambda: f.read(4096),b""):
                     sha256_hash.update(block)
                 entry=full_path.replace(folder,"")+"|"+sha256_hash.hexdigest()
                 reference.append(entry)
+    sys.stdout.write('\n')
     return reference
 def compare_sets(reference_a,reference_b,ref_a_name,ref_b_name,verbose):
     #count each set
@@ -40,7 +47,7 @@ def compare_sets(reference_a,reference_b,ref_a_name,ref_b_name,verbose):
         ref_a_path=[r.split("|")[0] for r in reference_a]
         ref_b_hash=[r.split("|")[1] for r in reference_b]
         ref_b_path=[r.split("|")[0] for r in reference_b]
-        print("-----Folder A Specifics-----")
+        print("-----Folder "+ref_a_name+" Specifics-----")
         for item in a_missing:
             unique=True
             item_hash=item.split("|")[1]
@@ -54,7 +61,7 @@ def compare_sets(reference_a,reference_b,ref_a_name,ref_b_name,verbose):
                 print("File: "+item_path+" exists in both sets, but contents differ")
             if unique:
                 print("File: "+item_path+" only seen in "+ref_a_name)
-        print("-----Folder B Specifics-----")
+        print("-----Folder "+ref_b_name+" Specifics-----")
         for item in b_missing:
             unique=True
             item_hash=item.split("|")[1]
