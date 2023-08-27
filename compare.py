@@ -5,8 +5,13 @@ import argparse
 
 
 def generate_folder_hash(folder):
+    print("Walking folder "+folder+" and computing a hash of each file.")
+    count=0
+    for root,dirs,files in os.walk(folder):
+        count+=len(files)
     reference=list()
     for root,dirs,files in os.walk(folder):
+        print(len(files))
         for name in files:
             full_path=os.path.join(root,name)
             with open(full_path,"rb") as f:
@@ -27,8 +32,42 @@ def compare_sets(reference_a,reference_b,ref_a_name,ref_b_name,verbose):
     missing_count_b=len(b_missing)
     print("Total Number of files in "+ref_a_name+" (A): "+str(count_a))
     print("Total Number of files in "+ref_b_name+" (B): "+str(count_b))
-    print("Number of files seen in A but not B: " + str(missing_count_a))
-    print("Number of files seen in B but not A: " + str(missing_count_b))
+    print("Number of files seen in A without exact match in "+ref_b_name+" : " + str(missing_count_a))
+    print("Number of files seen in B without exact match in "+ref_a_name+" : " + str(missing_count_b))
+    if verbose:
+        #generate separate hash and path lists
+        ref_a_hash=[r.split("|")[1] for r in reference_a]
+        ref_a_path=[r.split("|")[0] for r in reference_a]
+        ref_b_hash=[r.split("|")[1] for r in reference_b]
+        ref_b_path=[r.split("|")[0] for r in reference_b]
+        print("-----Folder A Specifics-----")
+        for item in a_missing:
+            unique=True
+            item_hash=item.split("|")[1]
+            item_path=item.split("|")[0]
+            if item_hash in ref_b_hash:
+                unique=False
+                matching_index=ref_b_hash.index(item_hash)
+                print("File: "+item_path+" matches a hash for "+ref_b_path[matching_index]+" in "+ref_b_name)
+            if item_path in ref_b_path:
+                unique=False
+                print("File: "+item_path+" exists in both sets, but contents differ")
+            if unique:
+                print("File: "+item_path+" only seen in "+ref_a_name)
+        print("-----Folder B Specifics-----")
+        for item in b_missing:
+            unique=True
+            item_hash=item.split("|")[1]
+            item_path=item.split("|")[0]
+            if item_hash in ref_a_hash:
+                unique=False
+                matching_index=ref_a_hash.index(item_hash)
+                print("File: "+item_path+" matches a hash for "+ref_a_path[matching_index]+" in "+ref_a_name)
+            if item_path in ref_a_path:
+                unique=False
+                print("File: "+item_path+" exists in both sets, but contents differ")
+            if unique:
+                print("File: "+item_path+" only seen in "+ref_b_name)
 
 
 #usage:
@@ -55,7 +94,6 @@ parser.add_argument('-l', '--list-all', action='store_true')
 args=parser.parse_args()
 
 #regardless, we will be generating a reference set for folder A
-print("Walking folder "+args.folderA+" and computing a hash of each file.")
 reference_a=generate_folder_hash(args.folderA)
 #if we're in create reference mode, write out and quit
 if args.create_reference is not None:
