@@ -24,7 +24,7 @@ def generate_folder_hash(folder):
                 sha256_hash=hashlib.sha256()
                 for block in iter(lambda: f.read(4096),b""):
                     sha256_hash.update(block)
-                entry=full_path.replace(folder,"")+"|"+sha256_hash.hexdigest()
+                entry=full_path.replace(folder+os.sep,"",1)+"|"+sha256_hash.hexdigest()
                 reference.append(entry)
     sys.stdout.write('\n')
     return reference
