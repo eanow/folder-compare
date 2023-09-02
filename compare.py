@@ -101,7 +101,7 @@ parser.add_argument('-l', '--list-all', action='store_true')
 args=parser.parse_args()
 
 #regardless, we will be generating a reference set for folder A
-reference_a=generate_folder_hash(args.folderA)
+reference_a=generate_folder_hash(args.folderA.rstrip(os.sep))
 #if we're in create reference mode, write out and quit
 if args.create_reference is not None:
     outfile=open(args.create_reference,"w")
@@ -110,7 +110,7 @@ if args.create_reference is not None:
     quit()
 #get reference set b
 if args.folderB is not None:
-    reference_b=generate_folder_hash(args.folderB)
+    reference_b=generate_folder_hash(args.folderB.rstrip(os.sep))
     compare_sets(reference_a,reference_b,args.folderA,args.folderB,args.list_all)
 elif args.use_reference is not None:
     reference_b=open(args.use_reference).read().splitlines()
