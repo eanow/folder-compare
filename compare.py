@@ -39,6 +39,9 @@ def compare_sets(reference_a,reference_b,ref_a_name,ref_b_name,verbose):
     missing_count_b=len(b_missing)
     print("Total Number of files in "+ref_a_name+" (A): "+str(count_a))
     print("Total Number of files in "+ref_b_name+" (B): "+str(count_b))
+    if missing_count_a==0 and missing_count_b==0:
+        print("Two sets contain identical files.")
+        return
     print("Number of files seen in A without exact match in "+ref_b_name+" : " + str(missing_count_a))
     print("Number of files seen in B without exact match in "+ref_a_name+" : " + str(missing_count_b))
     if verbose:
@@ -101,7 +104,7 @@ parser.add_argument('-l', '--list-all', action='store_true')
 args=parser.parse_args()
 
 #regardless, we will be generating a reference set for folder A
-reference_a=generate_folder_hash(args.folderA.rstrip(os.sep))
+reference_a=generate_folder_hash(os.path.normpath(args.folderA))
 #if we're in create reference mode, write out and quit
 if args.create_reference is not None:
     outfile=open(args.create_reference,"w")
@@ -110,11 +113,11 @@ if args.create_reference is not None:
     quit()
 #get reference set b
 if args.folderB is not None:
-    reference_b=generate_folder_hash(args.folderB.rstrip(os.sep))
-    compare_sets(reference_a,reference_b,args.folderA,args.folderB,args.list_all)
+    reference_b=generate_folder_hash(os.path.normpath(args.folderB))
+    compare_sets(reference_a,reference_b,os.path.normpath(args.folderA),os.path.normpath(args.folderB),args.list_all)
 elif args.use_reference is not None:
     reference_b=open(args.use_reference).read().splitlines()
-    compare_sets(reference_a,reference_b,args.folderA,args.use_reference,args.list_all)
+    compare_sets(reference_a,reference_b,os.path.normpath(args.folderA),args.use_reference,args.list_all)
 else:
     #something bad happened
     print("Second reference set not available; check arguments.")
